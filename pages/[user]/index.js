@@ -195,7 +195,7 @@ function User({ component }) {
                 </ul>
               </div>
               <div className="menu-buttons">
-                <div class="button" as="button">
+                <div className="button" as="button">
                   <BsFillPersonPlusFill /> Follow
                 </div>
               </div>
