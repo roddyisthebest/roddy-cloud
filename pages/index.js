@@ -15,7 +15,7 @@ const Container = styled.div`
   position: relative;
   width: 100%;
   min-height: 100vh;
-  padding-top: 50px;
+  padding: 50px 100px 0 100px;
   /* min-width: 1200px; */
   .main-Nav {
     position: fixed;
@@ -82,6 +82,12 @@ const Container = styled.div`
     align-items: center;
     color: white;
     flex-direction: row;
+  }
+  background-color: var(--color-nav-border);
+
+  .main {
+    background-color: white;
+    width: 100%;
   }
 `;
 
@@ -175,7 +181,13 @@ const Index = ({ component }) => {
           </ul>
         </div>
       </header>
-      {component ? component : <UserLink user={"cozyboy"}detail={""} title={"cozyboy"} />}
+      <div className="main">
+        {component ? (
+          component
+        ) : (
+          <UserLink user={"cozyboy"} detail={""} title={"cozyboy"} />
+        )}
+      </div>
     </Container>
   );
 };
