@@ -1,7 +1,7 @@
 import React from "react";
 import Index from ".";
-function stream() {
+function Stream() {
   return <Index component={<div>stream</div>}></Index>;
 }
 
-export default stream;
+export default Stream;

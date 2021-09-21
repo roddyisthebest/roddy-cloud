@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import firebase from "../firebase";
 import { useRouter } from "next/router";
 
-function login() {
+function Login() {
   const router = useRouter();
   console.log(router);
   const {
@@ -68,4 +68,4 @@ function login() {
   );
 }
 
-export default login;
+export default Login;

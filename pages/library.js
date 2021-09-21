@@ -1,7 +1,7 @@
 import React from "react";
 import Index from ".";
-function library() {
+function Library() {
   return <Index component={<div>library</div>}></Index>;
 }
 
-export default library;
+export default Library;

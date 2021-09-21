@@ -4,7 +4,7 @@ import firebase from "../firebase";
 import md5 from "md5";
 import { GrSoundcloud } from "react-icons/gr";
 
-function register() {
+function Register() {
   const {
     register,
     handleSubmit,
@@ -132,4 +132,4 @@ function register() {
   );
 }
 
-export default register;
+export default Register;
