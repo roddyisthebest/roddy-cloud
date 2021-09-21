@@ -1,9 +1,10 @@
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: "Raleway", sans-serif;
 }
 
 a {
@@ -13,4 +14,31 @@ a {
 
 * {
   box-sizing: border-box;
+  --color-nav-main: #333;
+  --color-nav-play: #f2f2f2;
+  --color-nav-border: #cecece;
+  --color-input-background: #e5e5e5;
+  --color-input-color: #666;
+  --color-user-background: RGB(142, 142, 144);
+  --color-border: #f2f2f2;
+  --color-logo: rgb(255, 85, 0);
+}
+
+.input-search {
+  height: 35px;
+}
+.form-control {
+  height: 100%;
+  background-color: var(--color-input-background);
+  border: none;
+}
+.input-group-text {
+  height: 100%;
+  background-color: var(--color-input-background);
+}
+
+#dropdown-basic {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
