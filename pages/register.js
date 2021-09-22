@@ -31,10 +31,14 @@ function Register() {
 
       console.log(createdUser);
 
-      await firebase.database().ref("users").child(createdUser.user.uid).set({
-        name: createdUser.user.displayName,
-        image: createdUser.user.photoURL,
-      });
+      await firebase
+        .database()
+        .ref("users")
+        .child(createdUser.user.displayName)
+        .set({
+          name: createdUser.user.displayName,
+          image: createdUser.user.photoURL,
+        });
 
       setLoading(false);
     } catch (e) {

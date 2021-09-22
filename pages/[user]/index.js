@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { GrSoundcloud } from "react-icons/gr";
 import UserLink from "../../components/UserLink";
@@ -7,10 +7,12 @@ import Index from "../";
 import { FaCheckCircle } from "react-icons/fa";
 import { BsFillPersonPlusFill } from "react-icons/bs";
 import { useSelector } from "react-redux";
+import firebase from "../../firebase";
 
 const Container = styled.div`
   padding: 0 100px;
   width: 100%;
+
   .user-header {
     width: 100%;
     background-color: var(--color-user-background);
@@ -139,7 +141,18 @@ const UserImg = styled.div`
 function User({ component }) {
   const router = useRouter();
   const user = useSelector((state) => state);
-  console.log(user);
+
+  const users = firebase.database().ref("users");
+
+  useEffect(() => {
+    usersListener();
+  }, []);
+
+  const usersListener = () => {
+    users.on("child_added", (dataSnapshot) => {
+      console.log(dataSnapshot.val());
+    });
+  };
 
   return (
     <Index

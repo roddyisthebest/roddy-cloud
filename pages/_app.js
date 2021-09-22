@@ -7,6 +7,7 @@ import { createStore } from "redux";
 import AudioPlayer from "../components/AudioPlayer";
 import reducer from "../redux/reducers";
 import { setUser, clearUser } from "../redux/action/actionUser";
+import { setSource } from "../redux/action/actionSource";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../styles/globals.css";
@@ -37,15 +38,34 @@ function MyApp({ Component, pageProps, store }) {
   useEffect(() => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
+        console.log(user);
         dispatch(setUser(user));
         // ${user._delegate.displayName}
+
         router.push(`/`);
       } else {
         dispatch(clearUser());
         console.log("error boy");
-        router.push("/login");
+        // router.push("/login");
       }
     });
+
+    firebase
+      .database()
+      .ref("source")
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          dispatch(setSource(snapshot.val()));
+
+        } else {
+          console.log("No data available");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
     return () => {};
   }, []);
 

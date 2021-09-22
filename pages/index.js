@@ -15,6 +15,7 @@ const Container = styled.div`
   position: relative;
   width: 100%;
   min-height: 100vh;
+
   padding: 50px 100px 0 100px;
   /* min-width: 1200px; */
   .main-Nav {
@@ -24,6 +25,7 @@ const Container = styled.div`
     height: 50px;
     padding: 0 100px;
     background-color: var(--color-nav-main);
+    min-width: 1500px;
   }
 
   .main-nav-left {
@@ -106,6 +108,7 @@ const UserPic = styled.div`
 const Index = ({ component }) => {
   const router = useRouter();
   const user = useSelector((state) => state.user.currentUser);
+  // useSelector((state) => console.log(state));
 
   const handleLogout = () => {
     firebase.auth().signOut();
