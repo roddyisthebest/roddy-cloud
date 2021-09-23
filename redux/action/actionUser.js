@@ -1,4 +1,4 @@
-import { SET_USER, CLEAR_USER } from "./types";
+import { SET_USER, CLEAR_USER, SET_PHOTO_URL, SET_SELETED_USER } from "./types";
 
 export function setUser(user) {
   return {
@@ -17,5 +17,12 @@ export function setPhotoURL(photoURL) {
   return {
     type: SET_PHOTO_URL,
     payload: photoURL,
+  };
+}
+
+export function setSelectedUser(user) {
+  return {
+    type: SET_SELETED_USER,
+    payload: user,
   };
 }

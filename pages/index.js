@@ -85,7 +85,7 @@ const Container = styled.div`
     color: white;
     flex-direction: row;
   }
-  background-color: var(--color-nav-border);
+  background-color: #f2f2f2;
 
   .main {
     background-color: white;

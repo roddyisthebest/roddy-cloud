@@ -1,10 +1,11 @@
 import { combineReducers } from "redux";
 import user from "./userReducer";
 import source from "./sourceReducer";
-
+import nowStack from "./nowStackReducer";
 const rootReducer = combineReducers({
   user,
-  source
+  source,
+  nowStack,
 });
 
 export default rootReducer;

@@ -227,7 +227,7 @@ function Upload() {
         description: "",
         privacy: "",
         img: "",
-        user: user.uid,
+        user: user.displayName,
         key: hash,
       });
     } catch (e) {

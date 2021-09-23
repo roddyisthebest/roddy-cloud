@@ -2,7 +2,7 @@ import "../styles/sign.css";
 import { useEffect } from "react";
 import firebase from "../firebase";
 import { useRouter } from "next/router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createStore } from "redux";
 import AudioPlayer from "../components/AudioPlayer";
 import reducer from "../redux/reducers";
@@ -34,7 +34,7 @@ const wrapper = createWrapper(configureStore, {
 function MyApp({ Component, pageProps, store }) {
   const router = useRouter();
   const dispatch = useDispatch();
-
+  const nowStack = useSelector((state) => state.nowStack);
   useEffect(() => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
@@ -42,7 +42,7 @@ function MyApp({ Component, pageProps, store }) {
         dispatch(setUser(user));
         // ${user._delegate.displayName}
 
-        router.push(`/`);
+        // router.push(`/`);
       } else {
         dispatch(clearUser());
         console.log("error boy");
@@ -57,7 +57,6 @@ function MyApp({ Component, pageProps, store }) {
       .then((snapshot) => {
         if (snapshot.exists()) {
           dispatch(setSource(snapshot.val()));
-
         } else {
           console.log("No data available");
         }
@@ -71,7 +70,7 @@ function MyApp({ Component, pageProps, store }) {
 
   return (
     <>
-      <AudioPlayer></AudioPlayer>
+      <AudioPlayer tracks={nowStack.nowStack}></AudioPlayer>
       <Component {...pageProps} store={store} />
     </>
   );

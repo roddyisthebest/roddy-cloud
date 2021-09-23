@@ -18,9 +18,10 @@ const AudioPlayer = ({ tracks }) => {
     return (
       <Back>
         <ReactAudioPlayer
-          src="/assets/audio/misaen.ogg"
+          src={tracks}
           controls={true}
           style={{ height: "100%" }}
+          autoPlay
         />
       </Back>
     );

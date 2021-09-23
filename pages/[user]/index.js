@@ -6,11 +6,11 @@ import { useRouter } from "next/router";
 import Index from "../";
 import { FaCheckCircle } from "react-icons/fa";
 import { BsFillPersonPlusFill } from "react-icons/bs";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import firebase from "../../firebase";
-
+import { setSelectedUser } from "../../redux/action/actionUser";
+import Track from "../../components/Track";
 const Container = styled.div`
-  padding: 0 100px;
   width: 100%;
 
   .user-header {
@@ -138,104 +138,170 @@ const UserImg = styled.div`
   margin-right: 30px;
 `;
 
+const Grid = styled.div`
+  .track-ul {
+    display: grid;
+    grid-auto-rows: 200px;
+    row-gap: 30px;
+    width: 100%;
+    list-style: none;
+    padding: 0;
+  }
+  .track-li {
+    width: 100%;
+  }
+`;
+
 function User({ component }) {
   const router = useRouter();
-  const user = useSelector((state) => state);
-
+  const dispatch = useDispatch();
+  const [user, setUser] = useState();
   const users = firebase.database().ref("users");
 
+  const reduxUser = useSelector((state) => state.user);
+;
   useEffect(() => {
-    usersListener();
-  }, []);
+    reduxUser.seletedUser && setUser(reduxUser.seletedUser);
+  }, [reduxUser]);
 
-  const usersListener = () => {
-    users.on("child_added", (dataSnapshot) => {
-      console.log(dataSnapshot.val());
-    });
-  };
+  useEffect(() => {
+    router.query.user && userPickup(router.query.user);
+  }, [router.query.user]);
+
+  // console.log(selectedUser);
+  function userPickup(child) {
+    console.log(child);
+    child &&
+      users
+        .child(child)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            dispatch(setSelectedUser(snapshot.val()));
+          } else {
+            console.log("No data available");
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+  }
+  ``;
+
+  // const usersListener = () => {
+  //   users.on("child_added", (dataSnapshot) => {
+  //     console.log(dataSnapshot.val());
+  //   });
+  // };
+  console.log(user);
 
   return (
     <Index
       component={
-        <Container>
-          <div className="user-header">
-            <UserImg img="https://i1.sndcdn.com/avatars-000653809223-cgck7j-t500x500.jpg" />
-            <div className="user-info">
-              <h2 className="user-name">
-                Yuzion{" "}
-                <FaCheckCircle style={{ fontSize: 20, color: "#3388dd" }} />
-              </h2>
-              <div>
-                <h3 className="user-grade">PRO UPGRADED</h3>
-              </div>
-            </div>
-          </div>
-          {/* <UserLink user={"cozyboy"} detail={""} title={"Home"} />
-          <UserLink user={"cozyboy"} detail={"album"} title={"Album"} />
-          <UserLink user={"cozyboy"} detail={"popular"} title={"Popular"} /> */}
-          {/* {component ? component : <div>home</div>} */}
-          <div className="detail">
-            <div className="detail-menu detail-grid">
-              <div className="menu-tabs">
-                <ul className="menu-tabs-items">
-                  <li className="menu-tabs-item">
-                    {/* <UserLink user={"cozyboy"} detail={""} title={"All"} /> */}
-                    <span onClick={() => router.push("/cozyboy")}>Home</span>
-                  </li>
-                  <li className="menu-tabs-item">
-                    <UserLink
-                      user={"cozyboy"}
-                      detail={"popular"}
-                      title={"Popular"}
-                    />
-                  </li>
-                  <li className="menu-tabs-item">
-                    {" "}
-                    <UserLink
-                      user={"cozyboy"}
-                      detail={"album"}
-                      title={"Album"}
-                    />
-                  </li>
-                  <li className="menu-tabs-item">
-                    {" "}
-                    <UserLink
-                      user={"cozyboy"}
-                      detail={"repost"}
-                      title={"Repost"}
-                    />
-                  </li>
-                </ul>
-              </div>
-              <div className="menu-buttons">
-                <div className="button" as="button">
-                  <BsFillPersonPlusFill /> Follow
+        user ? (
+          <Container>
+            <div className="user-header">
+              <UserImg img={user.image} />
+              <div className="user-info">
+                <h2 className="user-name">
+                  {user.name}
+                  <FaCheckCircle style={{ fontSize: 20, color: "#3388dd" }} />
+                </h2>
+                <div>
+                  <h3 className="user-grade">PRO UPGRADED</h3>
                 </div>
               </div>
             </div>
-            <div className=" detail-grid">
-              <div className="detail-content">
-                {component ? component : <div>home</div>}
+
+            <div className="detail">
+              <div className="detail-menu detail-grid">
+                <div className="menu-tabs">
+                  <ul className="menu-tabs-items">
+                    <li className="menu-tabs-item">
+                      <UserLink user={user.name} detail={""} title={"All"} />
+                    </li>
+                    <li className="menu-tabs-item">
+                      <UserLink
+                        user={user.name}
+                        detail={"popular"}
+                        title={"Popular"}
+                      />
+                    </li>
+                    <li className="menu-tabs-item">
+                      {" "}
+                      <UserLink
+                        user={user.name}
+                        detail={"album"}
+                        title={"Album"}
+                      />
+                    </li>
+                    <li className="menu-tabs-item">
+                      {" "}
+                      <UserLink
+                        user={user.name}
+                        detail={"repost"}
+                        title={"Repost"}
+                      />
+                    </li>
+                  </ul>
+                </div>
+                <div className="menu-buttons">
+                  <div className="button" as="button">
+                    <BsFillPersonPlusFill /> Follow
+                  </div>
+                </div>
               </div>
-              <div className="detail-info">
-                <div className="detail-info-header">
-                  <div className="detail-info-item">
-                    <h5 style={{ margin: 0, fontWeight: "400" }}>Followers</h5>
-                    <div style={{ fontSize: 21, fontWeight: "400" }}>26.9K</div>
-                  </div>
-                  <div className="detail-info-item">
-                    <h5 style={{ margin: 0, fontWeight: "400" }}>Following</h5>
-                    <div style={{ fontSize: 21, fontWeight: "400" }}>18</div>
-                  </div>
-                  <div className="detail-info-item">
-                    <h5 style={{ margin: 0, fontWeight: "400" }}>Tracks</h5>
-                    <div style={{ fontSize: 21, fontWeight: "400" }}>42</div>
+              <div className=" detail-grid">
+                <div className="detail-content">
+                  {component ? (
+                    component
+                  ) : (
+                    <Grid>
+                      <ul className="track-ul">
+                        {Object.entries(user.tracks).map(
+                          ([key, value]) => (
+                            <li className="track-li" key={key}>
+                              <Track
+                                title={key}
+                                value={value}
+                              />
+                              {/* <div>wow</div> */}
+                            </li>
+                          )
+                          // console.log(key, value)
+                        )}
+                      </ul>
+                    </Grid>
+                  )}
+                </div>
+                <div className="detail-info">
+                  <div className="detail-info-header">
+                    <div className="detail-info-item">
+                      <h5 style={{ margin: 0, fontWeight: "400" }}>
+                        Followers
+                      </h5>
+                      <div style={{ fontSize: 21, fontWeight: "400" }}>
+                        26.9K
+                      </div>
+                    </div>
+                    <div className="detail-info-item">
+                      <h5 style={{ margin: 0, fontWeight: "400" }}>
+                        Following
+                      </h5>
+                      <div style={{ fontSize: 21, fontWeight: "400" }}>18</div>
+                    </div>
+                    <div className="detail-info-item">
+                      <h5 style={{ margin: 0, fontWeight: "400" }}>Tracks</h5>
+                      <div style={{ fontSize: 21, fontWeight: "400" }}>42</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Container>
+          </Container>
+        ) : (
+          <div>Loading</div>
+        )
       }
     ></Index>
   );
