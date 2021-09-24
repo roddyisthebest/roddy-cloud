@@ -159,18 +159,22 @@ function User({ component }) {
   const users = firebase.database().ref("users");
 
   const reduxUser = useSelector((state) => state.user);
-;
   useEffect(() => {
     reduxUser.seletedUser && setUser(reduxUser.seletedUser);
   }, [reduxUser]);
 
   useEffect(() => {
     router.query.user && userPickup(router.query.user);
+    return users.off();
   }, [router.query.user]);
+
+  useEffect(() => {
+    usersListener();
+    return users.off();
+  }, []);
 
   // console.log(selectedUser);
   function userPickup(child) {
-    console.log(child);
     child &&
       users
         .child(child)
@@ -188,12 +192,11 @@ function User({ component }) {
   }
   ``;
 
-  // const usersListener = () => {
-  //   users.on("child_added", (dataSnapshot) => {
-  //     console.log(dataSnapshot.val());
-  //   });
-  // };
-  console.log(user);
+  const usersListener = () => {
+    users.on("value", (dataSnapshot) => {
+      console.log(dataSnapshot.val());
+    });
+  };
 
   return (
     <Index
@@ -258,18 +261,16 @@ function User({ component }) {
                   ) : (
                     <Grid>
                       <ul className="track-ul">
-                        {Object.entries(user.tracks).map(
-                          ([key, value]) => (
-                            <li className="track-li" key={key}>
-                              <Track
-                                title={key}
-                                value={value}
-                              />
-                              {/* <div>wow</div> */}
-                            </li>
-                          )
-                          // console.log(key, value)
-                        )}
+                        {user.tracks &&
+                          Object.entries(user.tracks).map(
+                            ([key, value]) => (
+                              <li className="track-li" key={key}>
+                                <Track title={key} value={value} />
+                                {/* <div>wow</div> */}
+                              </li>
+                            )
+                            // console.log(key, value)
+                          )}
                       </ul>
                     </Grid>
                   )}

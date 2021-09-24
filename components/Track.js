@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { AiFillPlayCircle, AiFillHeart } from "react-icons/ai";
 import { BiRepost, BiPlay } from "react-icons/bi";
@@ -6,6 +6,8 @@ import { BsThreeDots } from "react-icons/bs";
 import { MdChatBubble } from "react-icons/md";
 import { useSelector, useDispatch } from "react-redux";
 import { setNowTrack } from "../redux/action/actionNowTrack";
+import { setSelectedUser, setUser } from "../redux/action/actionUser";
+import firebase from "../firebase";
 const Container = styled.div`
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -68,6 +70,9 @@ const Container = styled.div`
     border-radius: 2.5px;
     padding: 0;
     background-color: white;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
   }
   .track-info-update-readonly {
     color: var(--color-input-color);
@@ -97,7 +102,7 @@ const Container = styled.div`
     height: 40px;
     padding: 5px;
     display: grid;
-    grid-template-columns: 25px 1fr;
+    grid-template-columns: 28px 1fr;
     background-color: var(--color-input-background);
     border-radius: 5px;
   }
@@ -122,8 +127,115 @@ const TrackPic = styled.div`
 `;
 
 function Track({ title, value }) {
+  useEffect(() => {
+    usersListener();
+  }, []);
+  console.log(value.likes);
+  const [liked, setLiked] = useState();
+
   const currentUser = useSelector((state) => state.user.currentUser);
+  const seletedUser = useSelector((state) => state.user.seletedUser);
   const dispatch = useDispatch();
+
+  const userRef = firebase
+    .database()
+    .ref("users")
+    .child(`${value.user}`)
+    .child("tracks")
+    .child(`${value.title}`);
+
+  const currentUserRef = firebase
+    .database()
+    .ref("users")
+    .child(`${currentUser.displayName}`);
+
+  const usersListener = () => {
+    userRef.child("likes").on("value", async (dataSnapshot) => {
+      await firebase
+        .database()
+        .ref("users")
+        .child(`${seletedUser.name}`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            dispatch(setSelectedUser(snapshot.val()));
+          } else {
+            console.log("No data available");
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      await currentUserRef
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            console.log(snapshot.val());
+            // dispatch(setUser(snapshot.val()));
+          } else {
+            console.log("No data available");
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      //   dispatch(setUser(user));
+    });
+  };
+
+  const tracksRef = firebase
+    .database()
+    .ref("tracks")
+    .child(`${value.gerne}`)
+    .child(`${value.title}`);
+
+  const setLikes = async () => {
+    let status = checkLike(value.likes);
+
+    try {
+      if (status) {
+        //delete user's track likes
+        await userRef
+          .child("likes")
+          .child(`${currentUser.displayName}`)
+          .remove();
+        await tracksRef
+          .child("likes")
+          .child(`${currentUser.displayName}`)
+          .remove();
+      } else {
+        //adding user's track likes
+        await userRef
+          .child("likes")
+          .child(`${currentUser.displayName}`)
+          .set({ uid: currentUser.uid, img: currentUser.photoURL });
+
+        //adding track's likes
+        await tracksRef
+          .child("likes")
+          .child(`${currentUser.displayName}`)
+          .set({ uid: currentUser.uid, img: currentUser.photoURL });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    // console.log(value.user);
+  };
+
+  const checkLike = (likesList) => {
+    console.log(likesList);
+    for (const [key, value] of Object.entries(likesList)) {
+      if (key == currentUser.displayName) {
+        setLiked(true);
+        return true;
+      }
+    }
+    setLiked(false);
+    return false;
+  };
+
   return (
     <Container>
       <div className="track-pic ">
@@ -159,8 +271,20 @@ function Track({ title, value }) {
         </div>
         <div className="track-info-update">
           <div className="track-info-update-buttons">
-            <button className="track-info-update-button">
+            <button
+              className="track-info-update-button"
+              onClick={setLikes}
+              style={{
+                border: `1px solid ${
+                  liked && liked
+                    ? "var(--color-nav-border)"
+                    : "var(--color-logo)"
+                }`,
+                color: ` ${liked && liked ? "black" : "var(--color-logo)"}`,
+              }}
+            >
               <AiFillHeart />
+              {value.likes ? Object.keys(value.likes).length : 0}
             </button>
             <button className="track-info-update-button">
               <BiRepost />

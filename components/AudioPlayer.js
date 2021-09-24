@@ -10,6 +10,7 @@ const Back = styled.div`
   padding: 0 100px;
   background-color: var(--color-nav-play);
   z-index: 5;
+  border-top: 1px solid var(--color-nav-border);
 `;
 
 const AudioPlayer = ({ tracks }) => {
