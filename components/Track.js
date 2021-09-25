@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import styled from "styled-components";
 import { AiFillPlayCircle, AiFillHeart } from "react-icons/ai";
 import { BiRepost, BiPlay } from "react-icons/bi";
@@ -130,7 +130,11 @@ function Track({ title, value }) {
   useEffect(() => {
     usersListener();
   }, []);
-  console.log(value.likes);
+
+  // useEffect(() => {
+  //   checkLike(value.likes);
+  // }, [value]);
+
   const [liked, setLiked] = useState();
 
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -171,7 +175,6 @@ function Track({ title, value }) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            console.log(snapshot.val());
             // dispatch(setUser(snapshot.val()));
           } else {
             console.log("No data available");
@@ -192,10 +195,8 @@ function Track({ title, value }) {
     .child(`${value.title}`);
 
   const setLikes = async () => {
-    let status = checkLike(value.likes);
-
     try {
-      if (status) {
+      if (checkLike(value.likes)) {
         //delete user's track likes
         await userRef
           .child("likes")
@@ -225,15 +226,47 @@ function Track({ title, value }) {
   };
 
   const checkLike = (likesList) => {
-    console.log(likesList);
-    for (const [key, value] of Object.entries(likesList)) {
-      if (key == currentUser.displayName) {
-        setLiked(true);
-        return true;
+    if (likesList !== undefined) {
+      for (const [key, value] of Object.entries(likesList)) {
+        if (key === currentUser.displayName) {
+          setLiked(true);
+          return true;
+        }
       }
+      setLiked(false);
+      return false;
+    } else {
+      setLiked(false);
+      return false;
     }
-    setLiked(false);
-    return false;
+  };
+
+  useMemo(() => {
+    checkLike(value.likes);
+    console.log({ ...value.likes });
+  }, [value.likes]);
+
+  const setPlay = () => {
+    dispatch(setNowTrack(value.audio));
+    let today = new Date();
+    userRef
+      .child("play")
+      .push()
+      .set({
+        listener: currentUser.displayName,
+        time: `${today.getFullYear()}-${
+          today.getMonth() + 1
+        }-${today.getDate()}`,
+      });
+    tracksRef
+      .child("play")
+      .push()
+      .set({
+        listener: currentUser.displayName,
+        time: `${today.getFullYear()}-${
+          today.getMonth() + 1
+        }-${today.getDate()}`,
+      });
   };
 
   return (
@@ -243,12 +276,7 @@ function Track({ title, value }) {
       </div>
       <div className="track-info">
         <div className="track-info-title ">
-          <button
-            className="track-info-title-playBtn "
-            onClick={() => {
-              dispatch(setNowTrack(value.audio));
-            }}
-          >
+          <button className="track-info-title-playBtn " onClick={setPlay}>
             <AiFillPlayCircle />
           </button>
           <div className="track-info-title-name">
@@ -277,14 +305,14 @@ function Track({ title, value }) {
               style={{
                 border: `1px solid ${
                   liked && liked
-                    ? "var(--color-nav-border)"
-                    : "var(--color-logo)"
+                    ? "var(--color-logo)"
+                    : "var(--color-nav-border)"
                 }`,
-                color: ` ${liked && liked ? "black" : "var(--color-logo)"}`,
+                color: ` ${liked && liked ? "var(--color-logo)" : "black"}`,
               }}
             >
               <AiFillHeart />
-              {value.likes ? Object.keys(value.likes).length : 0}
+              {value && value.likes ? Object.keys(value.likes).length : 0}
             </button>
             <button className="track-info-update-button">
               <BiRepost />
@@ -296,7 +324,7 @@ function Track({ title, value }) {
           <div className="track-info-update-readonly">
             <span style={{ marginRight: 3, fontSize: "20px" }}>
               <BiPlay />
-              3,941
+              {value && value.play ? Object.keys(value.play).length : 0}
             </span>
             <button
               className="track-info-update-readonly-button"

@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { GrSoundcloud } from "react-icons/gr";
 import UserLink from "../../components/UserLink";
 import { useRouter } from "next/router";
 import Index from "../";
 import { FaCheckCircle } from "react-icons/fa";
-import { BsFillPersonPlusFill } from "react-icons/bs";
+import { BsFillPersonCheckFill, BsPersonPlusFill } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
 import firebase from "../../firebase";
 import { setSelectedUser } from "../../redux/action/actionUser";
 import Track from "../../components/Track";
 const Container = styled.div`
   width: 100%;
-
   .user-header {
     width: 100%;
     background-color: var(--color-user-background);
@@ -80,14 +79,15 @@ const Container = styled.div`
     align-items: center;
   }
   .button {
-    color: white;
-    background-color: var(--color-logo);
+    /* color: white; */
+    /* background-color: var(--color-logo); */
     border-radius: 5px;
     margin: 0;
     border: none;
     padding: 2px 5px;
     display: flex;
     align-items: center;
+    border: 1px solid transparent;
   }
   .detail-content {
   }
@@ -139,6 +139,7 @@ const UserImg = styled.div`
 `;
 
 const Grid = styled.div`
+  margin-top: 10px;
   .track-ul {
     display: grid;
     grid-auto-rows: 200px;
@@ -153,25 +154,26 @@ const Grid = styled.div`
 `;
 
 function User({ component }) {
+
   const router = useRouter();
   const dispatch = useDispatch();
   const [user, setUser] = useState();
+  const [following, setFollowing] = useState();
   const users = firebase.database().ref("users");
-
   const reduxUser = useSelector((state) => state.user);
+
   useEffect(() => {
     reduxUser.seletedUser && setUser(reduxUser.seletedUser);
+    reduxUser.seletedUser && reduxUser.seletedUser.follow && checkFollow();
+    // reduxUser.currentUser && checkfollow(reduxUser.currentUser.follow);
   }, [reduxUser]);
 
   useEffect(() => {
     router.query.user && userPickup(router.query.user);
+    router.query.user && usersListener(router.query.user);
+
     return users.off();
   }, [router.query.user]);
-
-  useEffect(() => {
-    usersListener();
-    return users.off();
-  }, []);
 
   // console.log(selectedUser);
   function userPickup(child) {
@@ -192,10 +194,68 @@ function User({ component }) {
   }
   ``;
 
-  const usersListener = () => {
-    users.on("value", (dataSnapshot) => {
-      console.log(dataSnapshot.val());
-    });
+  const usersListener = (username) => {
+    users
+      .child(`${username}`)
+      .child("follow")
+      .on("value", async (dataSnapshot) => {
+        await users
+          .child(`${username}`)
+          .get()
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              dispatch(setSelectedUser(snapshot.val()));
+            } else {
+              console.log("No data available");
+            }
+          });
+      });
+  };
+
+  const setFollow = async () => {
+    // console.log(reduxUser);
+
+    if (following) {
+      user &&
+        users
+          .child(`${user.name}`)
+          .child("follow")
+          .child(`${reduxUser.currentUser.displayName}`)
+          .remove();
+      user &&
+        users
+          .child(`${reduxUser.currentUser.displayName}`)
+          .child("following")
+          .child(`${user.name}`)
+          .remove();
+    } else {
+      user &&
+        users
+          .child(`${user.name}`)
+          .child("follow")
+          .child(`${reduxUser.currentUser.displayName}`)
+          .set({
+            uid: reduxUser.currentUser.uid,
+            image: reduxUser.currentUser.photoURL,
+          });
+
+      user &&
+        users
+          .child(`${reduxUser.currentUser.displayName}`)
+          .child("following")
+          .child(`${user.name}`)
+          .set(user);
+    }
+  };
+  const checkFollow = () => {
+    const followList = reduxUser.seletedUser.follow;
+    for (const [key, value] of Object.entries(followList)) {
+      if (key == reduxUser.currentUser.displayName) {
+        setFollowing(true);
+        return;
+      }
+    }
+    setFollowing(false);
   };
 
   return (
@@ -248,11 +308,41 @@ function User({ component }) {
                     </li>
                   </ul>
                 </div>
-                <div className="menu-buttons">
-                  <div className="button" as="button">
-                    <BsFillPersonPlusFill /> Follow
-                  </div>
-                </div>
+                {router.query.user &&
+                  !(reduxUser.currentUser.displayName == router.query.user) && (
+                    <div className="menu-buttons">
+                      <button
+                        className="button"
+                        onClick={setFollow}
+                        style={{
+                          borderColor:
+                            following && following
+                              ? "var(--color-logo)"
+                              : "transparent",
+                          backgroundColor:
+                            following && following
+                              ? "white"
+                              : "var(--color-logo)",
+                          color:
+                            following && following
+                              ? "var(--color-logo)"
+                              : "white",
+                        }}
+                      >
+                        {following && following ? (
+                          <>
+                            <BsFillPersonCheckFill style={{ marginRight: 5 }} />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <BsPersonPlusFill style={{ marginRight: 5 }} />
+                            Follow
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
               </div>
               <div className=" detail-grid">
                 <div className="detail-content">
@@ -262,15 +352,11 @@ function User({ component }) {
                     <Grid>
                       <ul className="track-ul">
                         {user.tracks &&
-                          Object.entries(user.tracks).map(
-                            ([key, value]) => (
-                              <li className="track-li" key={key}>
-                                <Track title={key} value={value} />
-                                {/* <div>wow</div> */}
-                              </li>
-                            )
-                            // console.log(key, value)
-                          )}
+                          Object.entries(user.tracks).map(([key, value]) => (
+                            <li className="track-li" key={key}>
+                              <Track title={key} value={value} />
+                            </li>
+                          ))}
                       </ul>
                     </Grid>
                   )}
@@ -278,22 +364,37 @@ function User({ component }) {
                 <div className="detail-info">
                   <div className="detail-info-header">
                     <div className="detail-info-item">
-                      <h5 style={{ margin: 0, fontWeight: "400" }}>
+                      <h5
+                        style={{ margin: 0, fontWeight: "400", fontSize: 15 }}
+                      >
                         Followers
                       </h5>
-                      <div style={{ fontSize: 21, fontWeight: "400" }}>
-                        26.9K
-                      </div>
+                      <span style={{ fontSize: 21, fontWeight: "400" }}>
+                        {user.follow ? Object.keys(user.follow).length : 0}
+                      </span>
                     </div>
                     <div className="detail-info-item">
-                      <h5 style={{ margin: 0, fontWeight: "400" }}>
+                      <h5
+                        style={{ margin: 0, fontWeight: "400", fontSize: 15 }}
+                      >
                         Following
                       </h5>
-                      <div style={{ fontSize: 21, fontWeight: "400" }}>18</div>
+                      <span style={{ fontSize: 21, fontWeight: "400" }}>
+                        {" "}
+                        {user.following
+                          ? Object.keys(user.following).length
+                          : 0}
+                      </span>
                     </div>
                     <div className="detail-info-item">
-                      <h5 style={{ margin: 0, fontWeight: "400" }}>Tracks</h5>
-                      <div style={{ fontSize: 21, fontWeight: "400" }}>42</div>
+                      <h5
+                        style={{ margin: 0, fontWeight: "400", fontSize: 15 }}
+                      >
+                        Tracks
+                      </h5>
+                      <span style={{ fontSize: 21, fontWeight: "400" }}>
+                        {user.tracks ? Object.keys(user.tracks).length : 0}
+                      </span>
                     </div>
                   </div>
                 </div>

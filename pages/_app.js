@@ -35,7 +35,6 @@ function MyApp({ Component, pageProps, store }) {
   const router = useRouter();
   const dispatch = useDispatch();
   const nowStack = useSelector((state) => state.nowStack);
-  useSelector((state) => console.log(state));
   useEffect(() => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
