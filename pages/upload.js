@@ -181,25 +181,26 @@ function Upload() {
     } else {
       setStatus(false);
     }
+    return;
   }, [track]);
-  // useEffect(() => {
-
-  // }, []);
 
   const gerne = useSelector((state) => state.source && state.source.gerne);
-  const user = useSelector((state) => state.user.currentUser);
-
+  let user = useSelector((state) => state.user && state.user.currentUser);
   const imgSet = useRef();
   const userRef = firebase.database().ref("users");
   const trackRef = firebase.database().ref("tracks");
 
+  // useEffect(() => {
+  //   setCurrentUser(user);
+  // }, [user]);
+
   const router = useRouter();
 
-  const onDrop = useCallback(async (acceptedFiles) => {
+  const onDrop = async (acceptedFiles) => {
     const file = acceptedFiles[0];
     const metadata = { contentType: mime.lookup(file.name) };
+    let today = new Date();
     const hash = createHash(10);
-    console.log(hash);
     setTrackHash(hash);
     try {
       setLoading(true);
@@ -209,6 +210,7 @@ function Upload() {
         .child(`${user.uid}`)
         .child(`${hash}/track`)
         .put(file, metadata);
+
       uploadTaskSnapShot &&
         setStorage(
           firebase
@@ -229,13 +231,32 @@ function Upload() {
         img: "",
         user: user.displayName,
         key: hash,
+        time: parseInt(
+          `${today.getFullYear()}${
+            today.getMonth() + 1 < 10
+              ? "0" + (today.getMonth() + 1)
+              : today.getMonth() + 1
+          }${today.getDate() < 10 ? "0" + today.getDate() : today.getDate()}${
+            today.getHours() < 10 ? "0" + today.getHours() : today.getHours()
+          }${
+            today.getMinutes() < 10
+              ? "0" + today.getMinutes()
+              : today.getMinutes()
+          }${
+            today.getSeconds() < 10
+              ? "0" + today.getSeconds()
+              : today.getSeconds()
+          }`
+        ),
       });
+      console.log(hash);
     } catch (e) {
       console.log(e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   const changeHandler = (e) => {
@@ -257,6 +278,8 @@ function Upload() {
         .put(file, metadata);
 
       let downloadURL = await uploadTaskSnapShot.ref.getDownloadURL();
+      console.log(downloadURL);
+
       setImage(downloadURL);
       setTracks((prevState) => {
         return { ...prevState, img: downloadURL };
@@ -273,11 +296,14 @@ function Upload() {
       //   name: createdUser.user.displayName,
       //   image: createdUser.user.photoURL,
       // });
+      console.log(track);
+      console.log(user);
       userRef
         .child(`${user.displayName}/tracks`)
         .child(`${track.title}`)
         .set(track);
-      trackRef.child(`${track.gerne}`).child(`${track.title}`).set(track);
+      await trackRef.child(`${track.gerne}`).child(`${track.title}`).set(track);
+
       router.push(`/${user.displayName}`);
     } catch (e) {
       console.log(e);

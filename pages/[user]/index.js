@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import styled from "styled-components";
 import { GrSoundcloud } from "react-icons/gr";
 import UserLink from "../../components/UserLink";
@@ -154,18 +154,19 @@ const Grid = styled.div`
 `;
 
 function User({ component }) {
-
   const router = useRouter();
   const dispatch = useDispatch();
   const [user, setUser] = useState();
   const [following, setFollowing] = useState();
   const users = firebase.database().ref("users");
   const reduxUser = useSelector((state) => state.user);
+  const [track, setTrack] = useState({ status: true, data: null });
+  const [update, setUpdate] = useState(true);
 
   useEffect(() => {
     reduxUser.seletedUser && setUser(reduxUser.seletedUser);
     reduxUser.seletedUser && reduxUser.seletedUser.follow && checkFollow();
-    // reduxUser.currentUser && checkfollow(reduxUser.currentUser.follow);
+    reduxUser.seletedUser && setTrackSequence(reduxUser.seletedUser.tracks);
   }, [reduxUser]);
 
   useEffect(() => {
@@ -195,22 +196,61 @@ function User({ component }) {
   ``;
 
   const usersListener = (username) => {
+    console.log(username);
     users
       .child(`${username}`)
       .child("follow")
       .on("value", async (dataSnapshot) => {
-        await users
-          .child(`${username}`)
-          .get()
-          .then((snapshot) => {
-            if (snapshot.exists()) {
-              dispatch(setSelectedUser(snapshot.val()));
-            } else {
-              console.log("No data available");
-            }
-          });
+        setUpdate(true);
+        updateSelectedUser(username);
+      });
+    users
+      .child(`${username}`)
+      .child("tracks")
+      .on("child_added", async (data) => {
+        setUpdate(true);
+        updateSelectedUser(username);
+        console.log("i'm playing");
       });
   };
+
+  const updateSelectedUser = async (username) => {
+    await users
+      .child(`${username}`)
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          dispatch(setSelectedUser(snapshot.val()));
+        } else {
+          console.log("No data available");
+        }
+      });
+  };
+
+  const setTrackSequence = (trackObject) => {
+    if (track.status || update) {
+      const newArray = [];
+      trackObject &&
+        Object.entries(trackObject).map(([key, value]) => {
+          newArray.push({ title: key, ...value });
+        });
+      newArray.sort(function (a, b) {
+        return b.time - a.time;
+      });
+      setTrack({ status: false, data: newArray });
+      setUpdate(false);
+    }
+  };
+
+  // currentUserRef
+  //   .child("playList")
+  //   .orderByChild("time")
+  //   .on("child_added", (snapshot) => {
+  //     setList((prevState) => [
+  //       ...prevState,
+  //       { [snapshot.key]: { ...snapshot.val() } },
+  //     ]);
+  //   });
 
   const setFollow = async () => {
     // console.log(reduxUser);
@@ -351,10 +391,10 @@ function User({ component }) {
                   ) : (
                     <Grid>
                       <ul className="track-ul">
-                        {user.tracks &&
-                          Object.entries(user.tracks).map(([key, value]) => (
-                            <li className="track-li" key={key}>
-                              <Track title={key} value={value} />
+                        {track.data &&
+                          track.data.map((e, idx) => (
+                            <li className="track-li" key={idx}>
+                              <Track data={e} setUpdate={setUpdate} />
                             </li>
                           ))}
                       </ul>

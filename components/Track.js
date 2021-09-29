@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { AiFillPlayCircle, AiFillHeart } from "react-icons/ai";
 import { BiRepost, BiPlay } from "react-icons/bi";
@@ -126,11 +126,7 @@ const TrackPic = styled.div`
   height: 100%;
 `;
 
-function Track({ title, value }) {
-  useEffect(() => {
-    usersListener();
-  }, []);
-
+function Track({ data, setUpdate }) {
   // useEffect(() => {
   //   checkLike(value.likes);
   // }, [value]);
@@ -144,9 +140,9 @@ function Track({ title, value }) {
   const userRef = firebase
     .database()
     .ref("users")
-    .child(`${value.user}`)
+    .child(`${data.user}`)
     .child("tracks")
-    .child(`${value.title}`);
+    .child(`${data.title}`);
 
   const currentUserRef = firebase
     .database()
@@ -184,19 +180,28 @@ function Track({ title, value }) {
           console.error(error);
         });
 
+      setUpdate(true);
+
       //   dispatch(setUser(user));
     });
+
+    // .orderByChild("time").limitToFirst(1)
+
+    // ref.orderByChild('height').on('child_added', (snapshot) => {
+    //   console.log(snapshot.key + ' was ' + snapshot.val().height + ' meters tall');
+    // });
+    // return currentUserRef.child("playList").off();
   };
 
   const tracksRef = firebase
     .database()
     .ref("tracks")
-    .child(`${value.gerne}`)
-    .child(`${value.title}`);
+    .child(`${data.gerne}`)
+    .child(`${data.title}`);
 
   const setLikes = async () => {
     try {
-      if (checkLike(value.likes)) {
+      if (checkLike(data.likes)) {
         //delete user's track likes
         await userRef
           .child("likes")
@@ -206,6 +211,8 @@ function Track({ title, value }) {
           .child("likes")
           .child(`${currentUser.displayName}`)
           .remove();
+        setLiked(false);
+        await currentUserRef.child("likes").child(`${data.title}`).remove();
       } else {
         //adding user's track likes
         await userRef
@@ -218,6 +225,9 @@ function Track({ title, value }) {
           .child("likes")
           .child(`${currentUser.displayName}`)
           .set({ uid: currentUser.uid, img: currentUser.photoURL });
+        setLiked(true);
+
+        await currentUserRef.child("likes").child(`${data.title}`).set(data);
       }
     } catch (e) {
       console.log(e);
@@ -226,10 +236,13 @@ function Track({ title, value }) {
   };
 
   const checkLike = (likesList) => {
+    console.log(likesList);
     if (likesList !== undefined) {
       for (const [key, value] of Object.entries(likesList)) {
         if (key === currentUser.displayName) {
+          console.log(key);
           setLiked(true);
+
           return true;
         }
       }
@@ -240,14 +253,15 @@ function Track({ title, value }) {
       return false;
     }
   };
+  useEffect(() => {
+    usersListener();
+    checkLike(data.likes);
+  }, []);
 
-  useMemo(() => {
-    checkLike(value.likes);
-    console.log({ ...value.likes });
-  }, [value.likes]);
+  useCallback(() => checkLike(data.likes), [data.likes]);
 
   const setPlay = () => {
-    dispatch(setNowTrack(value.audio));
+    dispatch(setNowTrack(data.audio));
     let today = new Date();
     userRef
       .child("play")
@@ -258,6 +272,33 @@ function Track({ title, value }) {
           today.getMonth() + 1
         }-${today.getDate()}`,
       });
+
+    currentUserRef
+      .child("playList")
+      .child(`${data.title}`)
+      .set({
+        user: seletedUser.name,
+        image: data.img,
+        audio: data.audio,
+        time: parseInt(
+          `${today.getFullYear()}${
+            today.getMonth() + 1 < 10
+              ? "0" + (today.getMonth() + 1)
+              : today.getMonth() + 1
+          }${today.getDate() < 10 ? "0" + today.getDate() : today.getDate()}${
+            today.getHours() < 10 ? "0" + today.getHours() : today.getHours()
+          }${
+            today.getMinutes() < 10
+              ? "0" + today.getMinutes()
+              : today.getMinutes()
+          }${
+            today.getSeconds() < 10
+              ? "0" + today.getSeconds()
+              : today.getSeconds()
+          }`
+        ),
+      });
+
     tracksRef
       .child("play")
       .push()
@@ -267,12 +308,15 @@ function Track({ title, value }) {
           today.getMonth() + 1
         }-${today.getDate()}`,
       });
+
+    // citiesRef.where("population", ">", 100000).orderBy("population");
+    // currentUserRef.where()
   };
 
   return (
     <Container>
       <div className="track-pic ">
-        <TrackPic url={value.img} />
+        <TrackPic url={data.img} />
       </div>
       <div className="track-info">
         <div className="track-info-title ">
@@ -281,10 +325,10 @@ function Track({ title, value }) {
           </button>
           <div className="track-info-title-name">
             <h5 style={{ fontSize: "8px", margin: "0 0 5px 0 " }}>
-              {value.user}
+              {data.user}
             </h5>
             <strong style={{ color: "black", fontWeight: "400", fontSize: 17 }}>
-              <span>{value.title}</span>
+              <span>{data.title}</span>
             </strong>
           </div>
           <div className="track-info-title-time ">
@@ -312,7 +356,7 @@ function Track({ title, value }) {
               }}
             >
               <AiFillHeart />
-              {value && value.likes ? Object.keys(value.likes).length : 0}
+              {data && data.likes ? Object.keys(data.likes).length : 0}
             </button>
             <button className="track-info-update-button">
               <BiRepost />
@@ -324,7 +368,7 @@ function Track({ title, value }) {
           <div className="track-info-update-readonly">
             <span style={{ marginRight: 3, fontSize: "20px" }}>
               <BiPlay />
-              {value && value.play ? Object.keys(value.play).length : 0}
+              {data && data.play ? Object.keys(data.play).length : 0}
             </span>
             <button
               className="track-info-update-readonly-button"

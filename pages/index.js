@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { InputGroup, FormControl, Dropdown } from "react-bootstrap";
 import { AiOutlineSearch } from "react-icons/ai";
 import firebase from "../firebase";
+import MainHome from "../home/MainHome";
 
 const Container = styled.div`
   display: flex;
@@ -14,9 +15,8 @@ const Container = styled.div`
   align-items: center;
   position: relative;
   width: 100%;
-  min-height: 100vh;
   margin-bottom: 50px;
-
+  min-width: 1400px;
   padding: 50px 100px 0 100px;
   /* min-width: 1200px; */
   .main-Nav {
@@ -27,6 +27,7 @@ const Container = styled.div`
     padding: 0 100px;
     background-color: var(--color-nav-main);
     min-width: 1500px;
+    z-index: 500;
   }
 
   .main-nav-left {
@@ -93,6 +94,8 @@ const Container = styled.div`
     width: 100%;
   }
 `;
+
+const Home = styled.div``;
 
 const UserPic = styled.div`
   background-image: ${(props) => `url(${props.img})`};
@@ -179,19 +182,18 @@ const Index = ({ component }) => {
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={handleLogout}>logout</Dropdown.Item>
                   <Dropdown.Item>profile edit</Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={() => router.push(`/${user && user.displayName}`)}
+                  >
+                    Flex zone
+                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </li>
           </ul>
         </div>
       </header>
-      <div className="main">
-        {component ? (
-          component
-        ) : (
-          <UserLink user={"cozyboy"} detail={""} title={"cozyboy"} />
-        )}
-      </div>
+      <div className="main">{component ? component : <MainHome />}</div>
     </Container>
   );
 };
