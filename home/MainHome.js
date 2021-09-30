@@ -3,19 +3,20 @@ import styled from "styled-components";
 import Suggest from "../components/Suggest";
 import { useSelector } from "react-redux";
 import firebase from "../firebase";
+import MyInfo from "../components/MyInfo";
 
 const Container = styled.div`
   position: relative;
   min-height: calc(100vh - 60px);
-  padding: 0 30px;
+  padding: 30px;
   .main-contents {
-    padding: 30px 30px 0 0;
+    padding: 0 30px 0 0;
     margin: 0 330px 0 0;
   }
   .sub {
-    position: absoulte;
-    bottom: 0;
-    right: 0;
+    position: absolute;
+    top: 30px;
+    right: 30px;
   }
   .sub-contents {
   }
@@ -26,12 +27,12 @@ const Container = styled.div`
 
 function MainHome() {
   const [user, setUser] = useState();
+  const [allUser, setAllUser] = useState();
   const [allTrack, setAllTrack] = useState();
   const [playedTrack, setPlayedTrack] = useState();
   const currentUser = useSelector((state) => state.user.currentUser);
   const usersRef = firebase.database().ref("users");
   const trackRef = firebase.database().ref("tracks");
-
   useEffect(async () => {
     if (currentUser) {
       await usersRef
@@ -55,7 +56,19 @@ function MainHome() {
         console.log("No data available");
       }
     });
+    await usersRef
+      .limitToLast(100)
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          setAllUser(snapshot.val());
+        } else {
+          console.log("No data available");
+        }
+      });
   }, []);
+
+  console.log(allUser);
 
   useEffect(() => {
     allTrack && getPopular(allTrack);
@@ -91,6 +104,13 @@ function MainHome() {
           category="Top 50"
           data={playedTrack && playedTrack}
         ></Suggest>
+      </div>
+      <div className="sub">
+        <MyInfo
+          title={<div>Artists you should follow</div>}
+          button={<div>Refresh List</div>}
+          data={allUser}
+        />
       </div>
     </Container>
   );

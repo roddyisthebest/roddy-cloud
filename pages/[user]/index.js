@@ -78,17 +78,7 @@ const Container = styled.div`
     display: flex;
     align-items: center;
   }
-  .button {
-    /* color: white; */
-    /* background-color: var(--color-logo); */
-    border-radius: 5px;
-    margin: 0;
-    border: none;
-    padding: 2px 5px;
-    display: flex;
-    align-items: center;
-    border: 1px solid transparent;
-  }
+ 
   .detail-content {
   }
   .detail-info {
